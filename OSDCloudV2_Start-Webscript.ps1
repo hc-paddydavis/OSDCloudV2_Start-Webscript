@@ -1,3 +1,6 @@
+#Requires -RunAsAdministrator
+#Requires -Module OSD
+#Requires -Module OSDCloud
 #=============================================================================
 #region SCRIPT DETAILS
 #=============================================================================
@@ -5,6 +8,19 @@
 <#
 .SYNOPSIS
 Boots into the OSDCloud environment, updates OSD modules, and configures the startnet.cmd script.
+
+.NOTES
+The initial PowerShell commands should always contain the -WindowStyle Hidden parameter to prevent the PowerShell window from appearing on the screen.
+powershell.exe -WindowStyle Hidden -Command {command}
+
+This will prevent PowerShell from rebooting since the window will not be visible.
+powershell.exe -WindowStyle Hidden -NoExit -Command {command}
+
+The final PowerShell command should contain the -NoExit parameter to keep the PowerShell window open and to prevent the WinPE environment from restarting.
+powershell.exe -WindowStyle Hidden -NoExit -Command {command}
+
+Wpeinit and Startnet.cmd: Using WinPE Startup Scripts
+https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/wpeinit-and-startnetcmd-using-winpe-startup-scripts?view=windows-11
 
 .EXAMPLE
 PS C:\> OSDCloudV2_Start-Webscript.ps1
@@ -81,6 +97,21 @@ if ($EnableLogging) {
 }
 Write-Log "Computer Name is: $((Get-CimInstance -ClassName Win32_ComputerSystem).Name)" DarkYellow
 Write-Log "Current Time Zone is $((Get-TimeZone).DisplayName)" DarkYellow
+#=============================================================================
+# Copy PowerShell Modules
+#=============================================================================
+# Make sure they are up to date on your device before running this script.
+$ModuleNames = @('OSD', 'OSDCloud')
+$ModuleNames | ForEach-Object {
+    $ModuleName = $_
+    Write-Host -ForegroundColor DarkGray "[$(Get-Date -Format G)] [$($MyInvocation.MyCommand.Source)] Copy PowerShell Module to BootImage: $ModuleName"
+    Copy-PSModuleToWindowsImage -Name $ModuleName -Path $MountPath | Out-Null
+    # As an alternative, you can use the following command to get the latest from PowerShell Gallery:
+    # Save-Module -Name $ModuleName -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
+}
+#=============================================================================
+# Startnet.cmd
+#=============================================================================
 # Set Variables
 $OSDVersion = (Get-Module -Name OSD -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).Version
 
@@ -106,7 +137,8 @@ powershell.exe -w h -c Invoke-OSDCloudPEStartup UpdateModule -Value OSDCloud
 start /wait PowerShell -NoL -W Mi -C Invoke-WebPSScript 'https://bit.ly/3u04v1d'
 "@
 
-$StartnetCMD | Out-File -FilePath "$MountPath\Windows\System32\Startnet.cmd" -Encoding ascii -Width 2000 -Force
+Write-Host -ForegroundColor DarkGray "[$(Get-Date -Format G)] [$($MyInvocation.MyCommand.Source)] Adding $MountPath\Windows\System32\startnet.cmd"
+$StartnetCMD | Out-File -FilePath "$MountPath\Windows\System32\startnet.cmd" -Encoding ascii -Width 2000 -Force
 #=============================================================================
 #endregion
 #=============================================================================
