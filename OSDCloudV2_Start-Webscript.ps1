@@ -93,8 +93,15 @@ $StartnetCMD = @"
 wpeinit
 cd\
 title OSD $OSDVersion
-PowerShell -Nol -C Initialize-OSDCloudStartnet
-PowerShell -Nol -C Initialize-OSDCloudStartnetUpdate
+wpeinit
+wpeutil DisableFirewall
+wpeutil UpdateBootInfo
+powershell.exe -w h -c Invoke-OSDCloudPEStartup OSK
+powershell.exe -w h -c Invoke-OSDCloudPEStartup DeviceHardware
+powershell.exe -w h -c Invoke-OSDCloudPEStartup WiFi
+powershell.exe -w h -c Invoke-OSDCloudPEStartup IPConfig
+powershell.exe -w h -c Invoke-OSDCloudPEStartup UpdateModule -Value OSD
+powershell.exe -w h -c Invoke-OSDCloudPEStartup UpdateModule -Value OSDCloud
 @ECHO OFF
 start /wait PowerShell -NoL -W Mi -C Invoke-WebPSScript 'https://bit.ly/3u04v1d'
 "@
