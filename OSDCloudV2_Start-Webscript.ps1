@@ -115,9 +115,6 @@ $ModuleNames | ForEach-Object {
 # Set Variables
 $OSDVersion = (Get-Module -Name OSD -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).Version
 
-# Add OSD to Boot Image
-Save-Module -Name OSD -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
-
 # Set Startnet.cmd
 $StartnetCMD = @"
 @ECHO OFF
@@ -127,7 +124,6 @@ title OSD $OSDVersion
 wpeinit
 wpeutil DisableFirewall
 wpeutil UpdateBootInfo
-powershell.exe -w h -c Invoke-OSDCloudPEStartup OSK
 powershell.exe -w h -c Invoke-OSDCloudPEStartup DeviceHardware
 powershell.exe -w h -c Invoke-OSDCloudPEStartup WiFi
 powershell.exe -w h -c Invoke-OSDCloudPEStartup IPConfig
