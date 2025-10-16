@@ -110,8 +110,53 @@ $ModuleNames | ForEach-Object {
     # Save-Module -Name $ModuleName -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
 }
 
+<#=============================================================================
+#Setup WinPE with Wallpaper DEV
 #=============================================================================
-#Setup WinPE with Wallpaper
+
+$Wallpaper = 'C:\OSDWorkspace\submodules\osdcloud_wallpaper\Homer.jpg'
+# if wallpaper file exists, update the mounted windows image
+if (Test-Path $Wallpaper) {
+    Copy-Item -Path $Wallpaper -Destination "$env:TEMP\winpe.jpg" -Force | Out-Null
+    Copy-Item -Path $Wallpaper -Destination "$env:TEMP\winre.jpg" -Force | Out-Null
+    robocopy "$env:TEMP" "$MountPath\Windows\System32" winpe.jpg /ndl /njh /njs /b /np /r:0 /w:0
+    robocopy "$env:TEMP" "$MountPath\Windows\System32" winre.jpg /ndl /njh /njs /b /np /r:0 /w:0
+}
+#=============================================================================
+#endregion
+#=============================================================================
+#=============================================================================
+# Startnet.cmd DEV
+#=============================================================================
+# Set Variables
+$OSDVersion = (Get-Module -Name OSD -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).Version
+
+# Set Startnet.cmd
+$StartnetCMD = @"
+@ECHO OFF
+wpeinit
+cd\
+title OSD $OSDVersion
+wpeinit
+wpeutil DisableFirewall
+wpeutil UpdateBootInfo
+powershell.exe -w h -c Invoke-OSDCloudPEStartup DeviceHardware
+powershell.exe -w h -c Invoke-OSDCloudPEStartup WiFi
+powershell.exe -w h -c Invoke-OSDCloudPEStartup IPConfig
+powershell.exe -w h -c Invoke-OSDCloudPEStartup UpdateModule -Value OSD
+powershell.exe -w h -c Invoke-OSDCloudPEStartup UpdateModule -Value OSDCloud
+@ECHO OFF
+start /wait PowerShell -NoL -W Mi -C Invoke-WebPSScript 'https://bit.ly/3LdVVDR'
+"@
+
+Write-Host -ForegroundColor DarkGray "[$(Get-Date -Format G)] [$($MyInvocation.MyCommand.Source)] Adding $MountPath\Windows\System32\startnet.cmd"
+$StartnetCMD | Out-File -FilePath "$MountPath\Windows\System32\startnet.cmd" -Encoding ascii -Width 2000 -Force
+#=============================================================================
+#endregion
+#=============================================================================#>
+
+#=============================================================================
+#Setup WinPE with Wallpaper PROD
 #=============================================================================
 
 $Wallpaper = 'C:\OSDWorkspace\submodules\osdcloud_wallpaper\Hennepin.jpg'
@@ -126,7 +171,7 @@ if (Test-Path $Wallpaper) {
 #endregion
 #=============================================================================
 #=============================================================================
-# Startnet.cmd
+# Startnet.cmd PROD
 #=============================================================================
 # Set Variables
 $OSDVersion = (Get-Module -Name OSD -ListAvailable | Sort-Object Version -Descending | Select-Object -First 1).Version
