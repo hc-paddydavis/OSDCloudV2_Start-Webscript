@@ -109,6 +109,22 @@ $ModuleNames | ForEach-Object {
     # As an alternative, you can use the following command to get the latest from PowerShell Gallery:
     # Save-Module -Name $ModuleName -Path "$MountPath\Program Files\WindowsPowerShell\Modules" -Force
 }
+
+#=============================================================================
+#Setup WinPE with Wallpaper
+#=============================================================================
+
+$Wallpaper = 'C:\OSDWorkspace\submodules\osdcloud_wallpaper\Hennepin.jpg'
+# if wallpaper file exists, update the mounted windows image
+if (Test-Path $Wallpaper) {
+    Copy-Item -Path $Wallpaper -Destination "$env:TEMP\winpe.jpg" -Force | Out-Null
+    Copy-Item -Path $Wallpaper -Destination "$env:TEMP\winre.jpg" -Force | Out-Null
+    robocopy "$env:TEMP" "$MountPath\Windows\System32" winpe.jpg /ndl /njh /njs /b /np /r:0 /w:0
+    robocopy "$env:TEMP" "$MountPath\Windows\System32" winre.jpg /ndl /njh /njs /b /np /r:0 /w:0
+}
+#=============================================================================
+#endregion
+#=============================================================================
 #=============================================================================
 # Startnet.cmd
 #=============================================================================
